@@ -66,30 +66,8 @@ def scatter(x, colors):
     return f, ax, sc, txts
 
 def tsne(features, labels, epoch):
-    features = features.numpy()
-    labels = labels.numpy()
-    labels_num = np.unique(labels)
 
-    sub_features = None
-    sub_labels = np.array([])
-    nums = [500, 500, 500, 500, 500, 500, 500, 500, 500, 500]
-
-    for i in labels_num:
-        label_i = np.equal(labels, i)
-        feature_i = features[label_i][:1000]
-        feature_num = feature_i.shape[0]
-        feature = feature_i[np.random.choice(feature_num, nums[i])]
-        sub_labels = np.concatenate((sub_labels, np.ones(nums[i]) * i), axis=0)
-        if sub_features is None:
-            sub_features = feature
-        else:
-            sub_features = np.concatenate((sub_features, feature), axis=0)
-    
-    # print(sub_features.shape)
-
-    td_features = TSNE(n_components=2, learning_rate='auto',init='random').fit_transform(sub_features)
-    scatter(td_features, sub_labels)
-    plt.savefig(f'tsne_{epoch}.png', dpi=120)
+  pass
 
 def main():
     org_feat_memory = AugFeat('./org_feat_memory', 4)
@@ -249,47 +227,8 @@ def main():
     torch.save(model.state_dict(), p['end2end_model'])
 
 def plot_case(config_env, config_exp):
-    import random
-    # p = create_config(args.config_env, args.config_exp)
-    p = create_config(config_env, config_exp)
-    train_dataset = get_train_dataset(p, None, to_end2end_dataset=True, split='train+unlabeled')
-    train_dataloader = get_train_dataloader(p, train_dataset)
 
-    imageset = {}
-    '''cifar10'''
-    # for image in train_dataset:
-    #     if len(imageset) >= 10:
-    #         break
-    #     elif not imageset.get(image['class_name']) and len(image['error_neighbor']) > 0 and len(image['true_neighbor']) > 0:
-    #         imageset[image['class_name']] = [image['image'], random.choice(image['true_neighbor']), random.choice(image['error_neighbor'])]
-
-    '''imagenet10'''
-    for image in train_dataset:
-        if len(imageset) >= 10:
-            break
-        elif not imageset.get(image['target']) and len(image['error_neighbor']) > 0 and len(image['true_neighbor']) > 0:
-            imageset[image['target']] = [image['image'], random.choice(image['true_neighbor']), random.choice(image['error_neighbor'])]
-
-    return imageset
-    # class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-    # fig = plt.figure()
-
-    # print(class_names[0])
-    # print(len(imageset[class_names[0]]))
-
-    # assert 1 == 0
-
-    # for i in range(3):
-    #     for j in range(1, 11):
-    #         plt.subplot(3, 10, 3*i+j)
-    #         name = class_names[j]
-    #         img = imageset[name]
-    #         img = img.numpy()
-    #         # img = np.transpose(img, (1, 2, 0))
-    #         plt.imshow(img)
-    #         plt.axis('off')
-    
-    # plt.savefig('cifar_cases.png', bbox_inches='tight')
+  pass
 
 if __name__ == '__main__':
     main()
