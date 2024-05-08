@@ -166,67 +166,6 @@ class AGCLoss(nn.Module):
         loss = loss_ce + self.lamda * loss_ne
 
         return loss, loss_ce, loss_ne
-'''
-class RGCLoss(nn.Module):
-    # Based on the implementation of SupContrast
-    def __init__(self, temperature):
-        super(RGCLoss, self).__init__()
-        self.temperature = temperature
-        self.lamda = 0.1 # infoNCE损失中 分母应该全是负样本 考虑到正样本中存在假正样本情况 特添加此参数 同时该参数的值应该设置较小
-
-    def forward(self, features, neighbors_features, conf_pred_mask, label_mask, neighbor_num):
-        """
-        input:
-            - features: hidden feature representation of shape [b, 2, dim]
-
-        output:
-            - loss: loss computed according to SimCLR
-        """
-        b, n, dim = features.size()
-        n_ = n // 2
-
-        contrast_features = torch.cat(torch.unbind(features, dim=1), dim=0)
-        anchor = torch.cat([features[:,0], features[:,2]], dim=0)
-#         anchor = contrast_features
-
-        if neighbors_features is not None:
-            contrast_features = torch.split(contrast_features, n_*b, dim=0)
-            neighbors_features = torch.cat(torch.unbind(neighbors_features, dim=1), dim=0)
-            neighbors_features = torch.split(neighbors_features, neighbor_num*b, dim=0)
-            contrast_features = torch.cat([contrast_features[0],neighbors_features[0],contrast_features[1], neighbors_features[1]], dim=0).cuda()
-            assert(10*b == contrast_features.shape[0])
-
-        # Dot product
-        dot_product = torch.matmul(anchor, contrast_features.T) / self.temperature
-        dot_product = torch.cat(torch.split(dot_product, (n_ + neighbor_num)*b, dim=1), dim=0)
-
-        # Log-sum trick for numerical stability
-        logits_max, _ = torch.max(dot_product, dim=1, keepdim=True)
-        logits = dot_product - logits_max.detach()
-        exp_logits = torch.exp(logits)
-        
-        union_mask = ((conf_pred_mask + label_mask) > 0).float()
-        pseudo_mask = torch.scatter(union_mask.repeat(1, n_ + neighbor_num), 1, torch.arange(b).unsqueeze(1).cuda(), 0).cuda()
-        pseudo_mask = torch.cat([pseudo_mask, union_mask.repeat(2, n_ + neighbor_num), pseudo_mask], dim=0)
-        
-        posit_mask = torch.scatter(conf_pred_mask.repeat(1, n_ + neighbor_num), 1, torch.arange(b).unsqueeze(1).cuda(), 0).cuda()
-        posit_mask = torch.cat([posit_mask, conf_pred_mask.repeat(2, n_ + neighbor_num), posit_mask], dim=0)
-        
-        assert pseudo_mask.shape == exp_logits.shape
-        assert posit_mask.shape == exp_logits.shape
- 
-        ones_matrix = torch.ones_like(pseudo_mask)
-        prob = exp_logits / (((ones_matrix - pseudo_mask).cuda() * exp_logits).sum(1, keepdim=True) + posit_mask * exp_logits)
-        
-        # Mean log-likelihood for positive
-        loss = -((torch.log(prob) * posit_mask).sum(1) / posit_mask.sum(1)).mean()
-        # loss = -((torch.log(prob) * posit_mask).sum(1) / posit_mask.sum(1))
-        # loss = torch.split(loss, b, 0)
-        # loss = loss[0].mean() # weak - weak
-        # loss = torch.cat([loss[1], loss[2]], dim=0).mean() # weak - strong
-
-        return loss
-'''
 
 class RGCLoss(nn.Module):
     # Based on the implementation of SupContrast
